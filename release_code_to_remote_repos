@@ -1,0 +1,46 @@
+First step, Got changes from yesterday and push codes to remote repos (ML)
+cd amd_cvip/ltp
+git tag 
+git checkout ${tag_name} (cvip_mero_bu_20200708)  //checkout the tag you what to release from
+git push ml_remote HEAD:refs/heads/upstream/amd/android_10_mero_bu
+
+// kernel branch: mero-dev-5.4-merosi-bringup-rel
+cherry pick three commits
+git show ${commit_id} --name-only
+git diff ${tag_name} --name-only
+gives the same results
+
+
+Second step, verify
+cd /mnt/fastspace/bu/int/aosp
+repo init -u https://gerrit.magicleap.com/amd/aosp/platform/manifest -b upstream/amd/android_10_mero_bu
+repo sync -j16 -c
+cp /mnt/workspace/repos/ml/manifest/amd_releases.xml .repo/manifests/prev_manifest.xml
+// diff the manifests, should give the kernels updates
+repo diffmanifests --pretty="%h %s" prev_manifest.xml
+
+// manually update /mnt/workspace/repos/ml/manifest/amd_releases.xml
+// save manifest in /mnt/fastspace/bu/int/aosp to repo/ml
+repo manifest -r -o /mnt/workspace/repos/ml/manifest/default-ml.xml
+run git diff . 
+//--git a/amd_releases.xml b/amd_releases.xml in /mnt/workspace/repos/ml/manifest
+
+Third, tagging
+/mnt/workspace/scripts/tag-ml-releases.sh aosp_mero_buringup_20200709
+
+DO THE SAME FOR CVIP
+cd /mnt/fastspace/bu/int/cvip
+repo init -u https://gerrit.magicleap.com/amd/cvip-public/platform/manifest -b upstream/amd/android_10_mero_bu
+repo sync -j16 -c
+repo diffmanifests --pretty="%h %s" prev_manifest.xml
+/mnt/workspace/scripts/tag-ml-release-cvip.sh cvip_mero_buringup_20200709
+//verify
+repo init -u /mnt/workspace/repos/ml/cvip_manifest -b upstream/amd/android_10_mero_bu -m amd_releases.xml
+repo sync -j16 -c
+// should give alll changes
+repo diffmanifests --pretty="%h %s" prev_manifest.xml
+// in /mnt/workspace/repos/ml/manifest/cvip_manifest
+git tag -a cvip_mero_bringup_20200709 -m cvip_mero_bringup_20200709
+git push origin upstream/amd/android_10_mero_bu
+git push origin cvip_mero_bringup_20200709
+
